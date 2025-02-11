@@ -17,21 +17,17 @@ vector<unsigned char> generateKey(size_t length) {
     return key;
 }
 
-vector<unsigned char> deriveKey(const vector<unsigned char>& masterKey, const string& w) {
-    // Step 1: Compute PRF(masterKey, w)
+pair<vector<unsigned char>, vector<unsigned char>> deriveKey(const vector<unsigned char>& masterKey, const string& w) {
     vector<unsigned char> prf_output = computePRF(masterKey, w);
 
-    // Step 2: Split into K1 and K2
+    // Ensure the PRF output is at least two parts
     size_t half_size = prf_output.size() / 2;
+
+    // Correctly split PRF output
     vector<unsigned char> K1(prf_output.begin(), prf_output.begin() + half_size);
     vector<unsigned char> K2(prf_output.begin() + half_size, prf_output.end());
 
-    // Step 3: Concatenate K1 and K2 into final key
-    vector<unsigned char> derivedKey;
-    derivedKey.insert(derivedKey.end(), K1.begin(), K1.end());
-    derivedKey.insert(derivedKey.end(), K2.begin(), K2.end());
-
-    return derivedKey;
+    return {K1, K2};  // Return K1 and K2 as a pair
 }
 
 vector<unsigned char> computePRF(const vector<unsigned char>& key, const string& data) {
