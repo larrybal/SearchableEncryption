@@ -26,7 +26,7 @@ vector<unsigned char> generateKey(size_t length) {
     return key;
 }
 
-pair<vector<unsigned char>, vector<unsigned char>> deriveKey(const vector<unsigned char>& masterKey, const string& w) {
+pair<vector<unsigned char>, vector<unsigned char>> deriveKey(const vector<unsigned char>& masterKey, std::vector<std::string> w) {
     vector<unsigned char> prf_output = computePRF(masterKey, w);
 
     // Ensure the PRF output is at least two parts
