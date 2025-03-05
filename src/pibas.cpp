@@ -9,13 +9,60 @@
 #include "encryption.hpp"
 #include <unistd.h>
 
-#define KEYLEN 100
+#define KEYLEN 32
 using namespace std;
+
+// Converts toHex for lookupKey use
+string toHex(const vector<unsigned char>& data) {
+    stringstream ss;
+    ss << hex << setfill('0');
+    for (unsigned char c : data)
+        ss << setw(2) << static_cast<int>(c);
+    return ss.str();
+}
 
 // Setup function: creates an encrypted index
 std::unordered_map<std::string, std::string> Setup(
     const std::unordered_map<std::string, std::vector<std::string>> &D)
 {
+    std::string k = generateKey(KEYLEN);
+
+    // List L to store pairs
+    std::vector<std::pair<std::string, std::string> L;
+
+    // For each keyword w in D
+    for (const auto &entry : D)
+    {
+        const std::string &w = entry.first;
+        const vector<string> &ids = entry.second;
+
+        auto keys = deriveKey(K, vector<string>{w});
+
+        vector<unsigned char> K1 = keys.first;
+        vector<unsigned char> K2 = keys.second;
+
+        int c = 0;
+
+        for (const string &id : ids) 
+        {
+            string lookupKey = toHex(computePRF(K1, to_string(c)));
+            vector<unsigned char> d = encryptAES(K2, id);
+            L.push_back({lookupKey, d});
+            c++;
+        }
+
+    }
+
+    sort(L.begin(), L.end(), [](const auto &a, const auto &b) {
+        return a.first < b.first;
+    });
+
+    unordered_map<string, vector<unsigned char>> ED;
+    for (const auto &p : L) {
+        ED[p.first] = p.second;
+    }
+    
+    return {K, ED};
 
 }
 
