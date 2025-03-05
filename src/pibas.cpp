@@ -32,7 +32,27 @@ std::vector<std::string> Server(const std::unordered_map<std::string, std::strin
     const std::string &K2) 
 
 {
-    
+    std::vector<std::string> output;
+    int c = 0;
+
+    while (1) {
+        std::string tag = computePRF(K1, std::to_string(c));
+        auto it = ED.find(tag);
+
+        if (it == ED.end()) 
+        {
+            break;
+        }
+
+        std::string d = it->second;
+
+        std::string id = decryptAES(K2, d);
+        output.push_back(id);
+
+        c++;
+    }
+
+    return output;
 }
 
 // Search function: retrieves document IDs for a given keyword
