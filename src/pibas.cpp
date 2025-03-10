@@ -50,7 +50,7 @@ std::map<std::string, std::string> Setup(
         for (const string &id : ids)
         {
             string lookupKey = toHex(Encryption::computePRF(K1, to_string(c)));
-            vector<unsigned char> d = Encryption::encryptAES(K2, id);
+            vector<string> d = Encryption::encryptAES(K2, id);
             L.push_back({lookupKey, d});
             c++;
         }
