@@ -32,7 +32,7 @@ std::map<std::string, std::string> Setup(
     std::vector<unsigned char> K = Encryption::generateKey(KEYLEN);
 
     // List L to store pairs
-    std::vector<std::pair<std::string, std::vector<std::string>>> L;
+    std::vector<std::pair<std::string, vector<unsigned char>>> L;
 
     // For each keyword w in D
     for (const auto &entry : D)
@@ -59,7 +59,7 @@ std::map<std::string, std::string> Setup(
     sort(L.begin(), L.end(), [](const auto &a, const auto &b)
          { return a.first < b.first; });
 
-    map<string, vector<string>> ED;
+    map<string, vector<unsigned char>> ED;
     for (const auto &p : L)
     {
         ED[p.first] = p.second;
