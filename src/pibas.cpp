@@ -59,8 +59,9 @@ std::map<std::string, std::string> Setup(
     sort(L.begin(), L.end(), [](const auto &a, const auto &b)
          { return a.first < b.first; });
 
-    map<string, vector<unsigned char>> ED;
-    for (const auto &p : L) {
+    map<string, vector<string>> ED;
+    for (const auto &p : L)
+    {
         ED[p.first] = p.second;
     }
 
