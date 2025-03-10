@@ -68,17 +68,17 @@ std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
     return {K, ED};
 }
 
-std::pair<std::string, std::string> Client(const vector<unsigned char> K, const std::string &w)
+std::pair<vector<unsigned char>, vector<unsigned char>> Client(const vector<unsigned char> K, const std::string &w)
 {
-    std::string K1 = Encryption::computePRF(K, "1" + w);
-    std::string K2 = Encryption::computePRF(K, "2" + w);
+    vector<unsigned char> K1 = Encryption::computePRF(K, "1" + w);
+    vector<unsigned char> K2 = Encryption::computePRF(K, "2" + w);
 
     return {K1, K2};
 }
 
-std::vector<std::string> Server(const std::map<std::string, std::string> &ED,
-                                const std::string &K1,
-                                const std::string &K2)
+std::vector<std::string> Server(const map<string, vector<unsigned char>> &ED,
+                                const vector<unsigned char> &K1,
+                                const vector<unsigned char> &K2)
 
 {
     std::vector<std::string> output;
@@ -86,15 +86,16 @@ std::vector<std::string> Server(const std::map<std::string, std::string> &ED,
 
     while (1)
     {
-        std::string tag = Encryption::computePRF(K1, std::to_string(c));
-        auto it = ED.find(tag);
+        vector<unsigned char> tag = Encryption::computePRF(K1, std::to_string(c));
+        std::string tag_s(tag.begin(), tag.end());
+        auto it = ED.find(tag_s);
 
         if (it == ED.end())
         {
             break;
         }
 
-        std::string d = it->second;
+        vector<unsigned char> d = it->second;
 
         std::string id = Encryption::decryptAES(K2, d);
         output.push_back(id);
@@ -107,9 +108,9 @@ std::vector<std::string> Server(const std::map<std::string, std::string> &ED,
 
 // Search function: retrieves document IDs for a given keyword
 std::vector<std::string> Search(
-    const std::map<std::string, std::string> &ED,
-    const std::string &K,
-    const std::string &w)
+    const map<string, vector<unsigned char>> &ED,
+    const vector<unsigned char> &K,
+    const string &w)
 {
     auto keys = Client(K, w);
     return Server(ED, keys.first, keys.second);
