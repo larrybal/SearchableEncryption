@@ -2,6 +2,10 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -O2
 
+# OpenSSL paths (adjust these paths if necessary)
+OPENSSL_CFLAGS = $(shell pkg-config --cflags openssl)
+OPENSSL_LDFLAGS = $(shell pkg-config --libs openssl)
+
 # Source files
 SRC = pibas.cpp encryption.cpp main.cpp
 
@@ -11,7 +15,7 @@ HDR = pibas.hpp encryption.hpp
 # Output executable
 OUT = main
 
-# Object files
+# Object files (replace .cpp with .o)
 OBJ = $(SRC:.cpp=.o)
 
 # Default target: build the executable
@@ -19,11 +23,11 @@ all: $(OUT)
 
 # Rule to link object files into the final executable
 $(OUT): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $(OUT) $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(OUT) $(OBJ) $(OPENSSL_LDFLAGS)
 
-# Rule to compile each .cpp file to .o file
+# Rule to compile each .cpp file into .o object file
 %.o: %.cpp $(HDR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(OPENSSL_CFLAGS) -c $< -o $@
 
 # Clean target to remove object files and executable
 clean:
