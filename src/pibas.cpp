@@ -5,11 +5,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sstream>
+#include <unistd.h>
+#include <iomanip>
+#include <map>
 
 #include "pibas.hpp"
 #include "encryption.hpp"
-#include <unistd.h>
-#include <iomanip>
 
 #define KEYLEN 32
 using namespace std;
@@ -24,10 +25,10 @@ std::string toHex(const vector<unsigned char>& data) {
 }
 
 // Setup function: creates an encrypted index
-std::unordered_map<std::string, std::string> Setup(
-    const std::unordered_map<std::string, std::vector<std::string>> &D)
+std::map<std::string, std::string> Setup(
+    const std::map<std::string, std::vector<std::string>> &D)
 {
-    std::string K = Encryption::generateKey(KEYLEN);
+    std::vector<unsigned char> K = Encryption::generateKey(KEYLEN);
 
     // List L to store pairs
     std::vector<std::pair<std::string, std::string>> L;
@@ -59,7 +60,7 @@ std::unordered_map<std::string, std::string> Setup(
         return a.first < b.first;
     });
 
-    unordered_map<string, vector<unsigned char>> ED;
+    map<string, vector<unsigned char>> ED;
     for (const auto &p : L) {
         ED[p.first] = p.second;
     }
@@ -76,7 +77,7 @@ std::pair<std::string, std::string> Client(const std::string &K, const std::stri
     return {K1, K2};
 }
 
-std::vector<std::string> Server(const std::unordered_map<std::string, std::string> &ED,
+std::vector<std::string> Server(const std::map<std::string, std::string> &ED,
     const std::string &K1,
     const std::string &K2) 
 
@@ -106,7 +107,7 @@ std::vector<std::string> Server(const std::unordered_map<std::string, std::strin
 
 // Search function: retrieves document IDs for a given keyword
 std::vector<std::string> Search(
-    const std::unordered_map<std::string, std::string> &ED,
+    const std::map<std::string, std::string> &ED,
     const std::string &K,
     const std::string &w)
 {

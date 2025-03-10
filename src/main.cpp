@@ -2,14 +2,13 @@
 #include "pibas.hpp"
 
 #include <iostream>
-#include <unordered_map>
 #include <string>
 #include <map>
 
 int main() {
     // 1. Create a synthetic dataset (map of Age to tuple IDs)
     // Key, Value
-    std::unordered_map<std::string, std::string> dataset;
+    std::map<std::string, std::string> dataset;
     dataset["27"] = {"emp1", "emp2"};
     dataset["28"] = {"emp3"};
     dataset["29"] = {"emp4", "emp5", "emp6"};
@@ -24,7 +23,7 @@ int main() {
 
     // 3. For a given age (point query), generate search token, run Search, and decrypt results
     std::string searchAge = "27"; 
-    std::vector<std::string> searchResults = Search(ED, masterKey, searchAge);
+    std::vector<std::string> searchResults = Pibas::Search(ED, masterKey, searchAge);
 
     // Printing dataset contents 
     std::cout << "Dataset Contents:" << std::endl;
