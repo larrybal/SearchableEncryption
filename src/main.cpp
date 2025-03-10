@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <string>
+#include <map>
 
 int main() {
     // 1. Create a synthetic dataset (map of Age to tuple IDs)
@@ -19,7 +20,7 @@ int main() {
     std::string masterKey = "masterkey";
 
     // 2. Run Setup and generate the encrypted index ED
-    std::map<std::string, std::string> ED = Setup(dataset, masterKey);
+    std::map<std::string, std::string> ED = Pibas::Setup(dataset);
 
     // 3. For a given age (point query), generate search token, run Search, and decrypt results
     std::string searchAge = "27"; 
