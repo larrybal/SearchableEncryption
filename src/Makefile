@@ -1,6 +1,6 @@
 # Compiler settings
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -O2
+CXXFLAGS = -std=c++14 -Wall -Wextra -O2
 
 # OpenSSL paths (adjust these paths if necessary)
 OPENSSL_CFLAGS = $(shell pkg-config --cflags openssl)
