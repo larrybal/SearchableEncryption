@@ -26,7 +26,7 @@ std::string toHex(const vector<unsigned char> &data)
 }
 
 // Setup function: creates an encrypted index
-std::map<std::string, std::string> Setup(
+std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
     const std::map<std::string, std::vector<std::string>> &D)
 {
     std::vector<unsigned char> K = Encryption::generateKey(KEYLEN);
