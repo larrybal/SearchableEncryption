@@ -68,7 +68,7 @@ std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
     return {K, ED};
 }
 
-std::pair<std::string, std::string> Client(const std::string &K, const std::string &w)
+std::pair<std::string, std::string> Client(const vector<unsigned char> K, const std::string &w)
 {
     std::string K1 = Encryption::computePRF(K, "1" + w);
     std::string K2 = Encryption::computePRF(K, "2" + w);
