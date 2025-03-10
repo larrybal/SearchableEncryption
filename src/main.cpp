@@ -19,7 +19,7 @@ int main() {
     std::string masterKey = "masterkey";
 
     // 2. Run Setup and generate the encrypted index ED
-    std::map<std::string, std::string> ED = Pibas::Setup(dataset);
+    std::map<std::string, std::vector<std::string>> ED = Pibas::Setup(dataset);
 
     // 3. For a given age (point query), generate search token, run Search, and decrypt results
     std::string searchAge = "27"; 
