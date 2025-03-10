@@ -60,7 +60,7 @@ std::map<std::string, std::string> Setup(
         return a.first < b.first;
     });
 
-    map<string, vector<unsigned char>> ED;
+    std::map<std::string, std::vector<std::string>> ED;
     for (const auto &p : L) {
         ED[p.first] = p.second;
     }
