@@ -15,7 +15,7 @@ public:
     static std::vector<unsigned char> generateKey(size_t length);
 
     // Derive subkeys K1 and K2 from the master key
-    static std::pair<std::vector<string>, std::vector<string>>
+    static std::pair<std::vector<unsigned char>, std::vector<unsigned char>>
     deriveKey(const std::vector<unsigned char> &masterKey, std::vector<std::string> w);
 
     // Compute PRF
