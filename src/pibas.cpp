@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <list>
 #include <sys/types.h>
@@ -9,6 +8,8 @@
 #include <unistd.h>
 #include <iomanip>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 #include "pibas.hpp"
 #include "encryption.hpp"
@@ -16,30 +17,32 @@
 #define KEYLEN 32
 using namespace std;
 
+// Helper: Print a pair containing the master key and encrypted database.
 void printPair(const std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned char>>> &p)
 {
-    // Printing the vector<unsigned char> (first element of the pair)
-    std::cout << "Vector (first element): ";
+    // Print the master key.
+    std::cout << "Master Key: ";
     for (const auto &byte : p.first)
     {
-        std::cout << byte << " "; // Print each byte in the vector
+        std::cout << byte << " ";
     }
     std::cout << std::endl;
 
-    // Printing the map<string, vector<unsigned char>> (second element of the pair)
-    std::cout << "Map (second element):" << std::endl;
+    // Print the encrypted database map.
+    std::cout << "Encrypted Database (ED):" << std::endl;
     for (const auto &entry : p.second)
     {
-        std::cout << "Key: " << entry.first << " => Values: ";
+        std::cout << "Lookup Tag: " << entry.first << " => Encrypted ID: ";
         for (const auto &byte : entry.second)
         {
-            std::cout << byte << " "; // Print each byte in the vector for each map entry
+            std::cout << byte << " ";
         }
         std::cout << std::endl;
     }
 }
-// Converts toHex for lookupKey use
-std::string toHex(const vector<unsigned char> &data)
+
+// Helper: Convert vector<unsigned char> to a hex string.
+std::string toHex(const std::vector<unsigned char> &data)
 {
     stringstream ss;
     ss << hex << setfill('0');
@@ -48,122 +51,145 @@ std::string toHex(const vector<unsigned char> &data)
     return ss.str();
 }
 
-// Setup function: creates an encrypted index
-std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Pibas::Setup(
+/*
+ * Setup:
+ * 1. Generate a master key.
+ * 2. For each keyword w in the dataset D, derive keys as:
+ *       K1 = F(masterKey, "1" + w)
+ *       K2 = F(masterKey, "2" + w)
+ * 3. For each id in id(w):
+ *       Compute lookup tag ℓ = F(K1, c)
+ *       Encrypt the id using K2.
+ * 4. Add (ℓ, encrypted id) to list L (sorted lexicographically).
+ * 5. Create the encrypted database ED from L.
+ */
+std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned char>>> Pibas::Setup(
     const std::map<std::string, std::vector<std::string>> &D)
 {
-    std::vector<unsigned char> K = Encryption::generateKey(KEYLEN);
+    // Generate the master key.
+    std::vector<unsigned char> masterKey = Encryption::generateKey(KEYLEN);
 
-    // List L to store pairs
-    std::vector<std::pair<std::string, vector<unsigned char>>> L;
+    // List to store pairs (lookup tag, encrypted id).
+    std::vector<std::pair<std::string, std::vector<unsigned char>>> L;
 
-    // For each keyword w in D
+    // For each keyword w in the dataset.
     for (const auto &entry : D)
     {
         const std::string &w = entry.first;
-        const vector<string> &ids = entry.second;
+        const std::vector<std::string> &ids = entry.second;
 
-        auto keys = Encryption::deriveKey(K, w);
-
-        vector<unsigned char> K1 = keys.first;
-        vector<unsigned char> K2 = keys.second;
+        // Derive keys using the PiBas method:
+        // K1 = F(masterKey, "1" + w)
+        // K2 = F(masterKey, "2" + w)
+        std::vector<unsigned char> K1 = Encryption::computePRF(masterKey, "1" + w);
+        std::vector<unsigned char> K2 = Encryption::computePRF(masterKey, "2" + w);
 
         int c = 0;
-
-        for (const string &id : ids)
+        for (const std::string &id : ids)
         {
-            string lookupKey = toHex(Encryption::computePRF(K1, to_string(c)));
-            cout << "id: " << id << " lookup: " << lookupKey << endl;
-            vector<unsigned char> d = Encryption::encryptAES(K2, id);
-            L.push_back({lookupKey, d});
+            // Compute lookup tag ℓ = F(K1, c)
+            std::string lookupTag = toHex(Encryption::computePRF(K1, std::to_string(c)));
+            std::cout << "id: " << id << " lookup tag: " << lookupTag << std::endl;
+
+            // Encrypt the document id using K2.
+            std::vector<unsigned char> encryptedId = Encryption::encryptAES(K2, id);
+            L.push_back({lookupTag, encryptedId});
             c++;
         }
     }
 
-    sort(L.begin(), L.end(), [](const auto &a, const auto &b)
-         { return a.first < b.first; });
+    // Sort L lexicographically by the lookup tag.
+    sort(L.begin(), L.end(), [](const auto &a, const auto &b) {
+        return a.first < b.first;
+    });
 
-    map<string, vector<unsigned char>> ED;
+    // Create the encrypted database ED.
+    std::map<std::string, std::vector<unsigned char>> ED;
     for (const auto &p : L)
     {
         ED[p.first] = p.second;
     }
-    printPair({K, ED});
-    return {K, ED};
+    printPair({masterKey, ED});
+    return {masterKey, ED};
 }
+
+// Helper: Print the two vectors (K1 and K2).
 void printPair2(const std::pair<std::vector<unsigned char>, std::vector<unsigned char>> &p)
 {
-    // Print the first vector (first element of the pair)
-    std::cout << "First vector (pair.first):" << std::endl;
+    std::cout << "K1: ";
     for (const auto &byte : p.first)
     {
-        std::cout << static_cast<int>(byte) << " "; // Cast to int for printing readable values
+        std::cout << static_cast<int>(byte) << " ";
     }
     std::cout << std::endl;
 
-    // Print the second vector (second element of the pair)
-    std::cout << "Second vector (pair.second):" << std::endl;
+    std::cout << "K2: ";
     for (const auto &byte : p.second)
     {
-        std::cout << static_cast<int>(byte) << " "; // Cast to int for printing readable values
+        std::cout << static_cast<int>(byte) << " ";
     }
     std::cout << std::endl;
 }
-std::pair<vector<unsigned char>, vector<unsigned char>> Client(const vector<unsigned char> K, const std::string &w)
+
+/*
+ * Client (Search) Function:
+ * 1. On input (masterKey, w), derive:
+ *       K1 = F(masterKey, "1" + w)
+ *       K2 = F(masterKey, "2" + w)
+ * 2. Return (K1, K2) to be used by the server.
+ */
+std::pair<std::vector<unsigned char>, std::vector<unsigned char>> Client(const std::vector<unsigned char> masterKey, const std::string &w)
 {
-    vector<unsigned char> K1 = Encryption::computePRF(K, "1" + w);
-    vector<unsigned char> K2 = Encryption::computePRF(K, "2" + w);
+    std::vector<unsigned char> K1 = Encryption::computePRF(masterKey, "1" + w);
+    std::vector<unsigned char> K2 = Encryption::computePRF(masterKey, "2" + w);
     printPair2({K1, K2});
     return {K1, K2};
 }
 
-std::vector<std::string> Server(const map<string, vector<unsigned char>> &ED,
-                                const vector<unsigned char> &K1,
-                                const vector<unsigned char> &K2)
-
+/*
+ * Server (Search) Function:
+ * 1. For each counter c = 0, 1, 2, ...:
+ *       Compute tag = F(K1, c)
+ *       If tag is found in ED, decrypt the corresponding encrypted id using K2.
+ *       Stop when no entry is found.
+ */
+std::vector<std::string> Server(const std::map<std::string, std::vector<unsigned char>> &ED,
+                                const std::vector<unsigned char> &K1,
+                                const std::vector<unsigned char> &K2)
 {
     std::vector<std::string> output;
     int c = 0;
 
-    while (1)
+    while (true)
     {
-        string tag = toHex(Encryption::computePRF(K1, std::to_string(c)));
-        // std::string tag_s(tag.begin(), tag.end());
-        cout << "tag s" << tag << endl;
+        std::string tag = toHex(Encryption::computePRF(K1, std::to_string(c)));
+        std::cout << "Computed tag: " << tag << std::endl;
         auto it = ED.find(tag);
 
         if (it == ED.end())
         {
-            cout << "breaks after c: " << to_string(c) << endl;
+            std::cout << "No entry found for counter c = " << c << ". Ending search." << std::endl;
             break;
         }
 
-        vector<unsigned char> d = it->second;
-
-        std::string id = Encryption::decryptAES(K2, d);
-        std::cout << "id: " << id << std::endl;
-
+        std::vector<unsigned char> encryptedId = it->second;
+        std::string id = Encryption::decryptAES(K2, encryptedId);
+        std::cout << "Decrypted id: " << id << std::endl;
         output.push_back(id);
-
         c++;
-        std::cout << "output" << std::endl;
-    }
-    for (const std::string &str : output)
-    {
-        std::cout << str << std::endl; // Printing each string followed by a newline
     }
     return output;
 }
+
+// Helper: Print the search parameters.
 void printSearchResult(const std::map<std::string, std::vector<unsigned char>> &ED,
-                       const std::vector<unsigned char> &K,
+                       const std::vector<unsigned char> &masterKey,
                        const std::string &w)
 {
-    // Printing the map<string, vector<unsigned char>>
-    std::cout << "Map (ED):" << std::endl;
+    std::cout << "Encrypted Database (ED):" << std::endl;
     for (const auto &pair : ED)
     {
-        std::cout << "Key: " << pair.first << std::endl;
-        std::cout << "Values: ";
+        std::cout << "Lookup Tag: " << pair.first << " -> Encrypted Value: ";
         for (const auto &value : pair.second)
         {
             std::cout << value << " ";
@@ -171,27 +197,29 @@ void printSearchResult(const std::map<std::string, std::vector<unsigned char>> &
         std::cout << std::endl;
     }
 
-    // Printing the vector<unsigned char> (K)
-    std::cout << "Vector (K):" << std::endl;
-    for (const auto &byte : K)
+    std::cout << "Master Key:" << std::endl;
+    for (const auto &byte : masterKey)
     {
-        std::cout << byte << std::endl;
+        std::cout << byte << " ";
     }
+    std::cout << std::endl;
 
-    // Printing the string (w)
-    std::cout << "String (w): " << w << std::endl;
+    std::cout << "Search Keyword: " << w << std::endl;
 }
 
-// Search function: retrieves document IDs for a given keyword
+/*
+ * Search:
+ * Given ED and masterKey, perform the search for keyword w.
+ */
 std::vector<std::string> Pibas::Search(
-    const map<string, vector<unsigned char>> &ED,
-    const vector<unsigned char> &K,
-    const string &w)
+    const std::map<std::string, std::vector<unsigned char>> &ED,
+    const std::vector<unsigned char> &masterKey,
+    const std::string &w)
 {
-    printSearchResult(ED, K, w);
-    auto keys = Client(K, w);
-    cout << "before server" << endl;
-    vector<string> result = Server(ED, keys.first, keys.second);
-    cout << "after server" << endl;
+    printSearchResult(ED, masterKey, w);
+    auto keys = Client(masterKey, w);
+    std::cout << "Starting server lookup..." << std::endl;
+    std::vector<std::string> result = Server(ED, keys.first, keys.second);
+    std::cout << "Search complete." << std::endl;
     return result;
 }

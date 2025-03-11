@@ -14,9 +14,9 @@ vector<unsigned char> Encryption::generateKey(size_t length)
     vector<unsigned char> key(length);
 
     // Needs valid key length for AES
-    if (length != 16 && length != 24 && length != 32)
+    if (length != 32)
     {
-        cerr << "Invalid AES key length. Must be 16, 24, or 32 bytes." << endl;
+        cerr << "Invalid AES key length. Must be 32 bytes." << endl;
         throw invalid_argument("Unsupported AES key length.");
     }
 
