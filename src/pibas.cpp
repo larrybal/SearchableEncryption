@@ -73,6 +73,7 @@ std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Pibas::Setu
         for (const string &id : ids)
         {
             string lookupKey = toHex(Encryption::computePRF(K1, to_string(c)));
+            cout << "id: " << id << " lookup: " << lookupKey << endl;
             vector<unsigned char> d = Encryption::encryptAES(K2, id);
             L.push_back({lookupKey, d});
             c++;
@@ -126,10 +127,10 @@ std::vector<std::string> Server(const map<string, vector<unsigned char>> &ED,
 
     while (1)
     {
-        vector<unsigned char> tag = Encryption::computePRF(K1, std::to_string(c));
-        std::string tag_s(tag.begin(), tag.end());
-        cout << "tag s" << tag_s << endl;
-        auto it = ED.find(tag_s);
+        string tag = toHex(Encryption::computePRF(K1, std::to_string(c)));
+        // std::string tag_s(tag.begin(), tag.end());
+        cout << "tag s" << tag << endl;
+        auto it = ED.find(tag);
 
         if (it == ED.end())
         {
