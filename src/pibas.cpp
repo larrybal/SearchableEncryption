@@ -17,30 +17,6 @@
 #define KEYLEN 32
 using namespace std;
 
-// Helper: Print a pair containing the master key and encrypted database.
-void printPair(const std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned char>>> &p)
-{
-    // Print the master key.
-    std::cout << "Master Key: ";
-    for (const auto &byte : p.first)
-    {
-        std::cout << byte << " ";
-    }
-    std::cout << std::endl;
-
-    // Print the encrypted database map.
-    std::cout << "Encrypted Database (ED):" << std::endl;
-    for (const auto &entry : p.second)
-    {
-        std::cout << "Lookup Tag: " << entry.first << " => Encrypted ID: ";
-        for (const auto &byte : entry.second)
-        {
-            std::cout << byte << " ";
-        }
-        std::cout << std::endl;
-    }
-}
-
 // Helper: Convert vector<unsigned char> to a hex string.
 std::string toHex(const std::vector<unsigned char> &data)
 {
@@ -52,16 +28,35 @@ std::string toHex(const std::vector<unsigned char> &data)
 }
 
 /*
- * Setup:
- * 1. Generate a master key.
- * 2. For each keyword w in the dataset D, derive keys as:
- *       K1 = F(masterKey, "1" + w)
- *       K2 = F(masterKey, "2" + w)
- * 3. For each id in id(w):
- *       Compute lookup tag ℓ = F(K1, c)
- *       Encrypt the id using K2.
- * 4. Add (ℓ, encrypted id) to list L (sorted lexicographically).
- * 5. Create the encrypted database ED from L.
+ * Helper: Manually expand the PRF output.
+ * This function calls computePRF twice with diversifiers "0" and "1",
+ * concatenates the two outputs, and returns the result.
+ */
+std::vector<unsigned char> computePRFExpanded(const std::vector<unsigned char> &masterKey, const std::string &w)
+{
+    // Call computePRF with two different diversifiers
+    std::vector<unsigned char> part1 = Encryption::computePRF(masterKey, w + "0");
+    std::vector<unsigned char> part2 = Encryption::computePRF(masterKey, w + "1");
+
+    std::vector<unsigned char> combined;
+    combined.insert(combined.end(), part1.begin(), part1.end());
+    combined.insert(combined.end(), part2.begin(), part2.end());
+    return combined;
+}
+
+/*
+ * PiBas Setup (with manual PRF expansion):
+ * 1. Generate a master key K.
+ * 2. For each keyword w in the dataset D:
+ *       a. Compute combined = computePRFExpanded(K, w) yielding 2*KEYLEN bytes.
+ *       b. Split combined into:
+ *             K1 = first KEYLEN bytes,
+ *             K2 = last KEYLEN bytes.
+ *       c. For each id in id(w):
+ *              i.   ℓ = F(K1, c)   [c is a counter]
+ *              ii.  d = Enc(K2, id)
+ *              iii. Add (ℓ, d) to list L.
+ * 3. Sort L lexicographically by ℓ and create the encrypted database ED.
  */
 std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned char>>> Pibas::Setup(
     const std::map<std::string, std::vector<std::string>> &D)
@@ -72,17 +67,17 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
     // List to store pairs (lookup tag, encrypted id).
     std::vector<std::pair<std::string, std::vector<unsigned char>>> L;
 
-    // For each keyword w in the dataset.
+    // For each keyword in the dataset.
     for (const auto &entry : D)
     {
         const std::string &w = entry.first;
         const std::vector<std::string> &ids = entry.second;
 
-        // Derive keys using the PiBas method:
-        // K1 = F(masterKey, "1" + w)
-        // K2 = F(masterKey, "2" + w)
-        std::vector<unsigned char> K1 = Encryption::computePRF(masterKey, "1" + w);
-        std::vector<unsigned char> K2 = Encryption::computePRF(masterKey, "2" + w);
+        // Manually expand the PRF: combined will be 2*KEYLEN bytes.
+        std::vector<unsigned char> combined = computePRFExpanded(masterKey, w);
+        // Split into K1 and K2.
+        std::vector<unsigned char> K1(combined.begin(), combined.begin() + KEYLEN);
+        std::vector<unsigned char> K2(combined.begin() + KEYLEN, combined.end());
 
         int c = 0;
         for (const std::string &id : ids)
@@ -98,7 +93,7 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
         }
     }
 
-    // Sort L lexicographically by the lookup tag.
+    // Sort L lexicographically by lookup tag.
     sort(L.begin(), L.end(), [](const auto &a, const auto &b)
          { return a.first < b.first; });
 
@@ -108,49 +103,33 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
     {
         ED[p.first] = p.second;
     }
-    // printPair({masterKey, ED});
     return {masterKey, ED};
-}
-
-// Helper: Print the two vectors (K1 and K2).
-void printPair2(const std::pair<std::vector<unsigned char>, std::vector<unsigned char>> &p)
-{
-    std::cout << "K1: ";
-    for (const auto &byte : p.first)
-    {
-        std::cout << static_cast<int>(byte) << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "K2: ";
-    for (const auto &byte : p.second)
-    {
-        std::cout << static_cast<int>(byte) << " ";
-    }
-    std::cout << std::endl;
 }
 
 /*
  * Client (Search) Function:
- * 1. On input (masterKey, w), derive:
- *       K1 = F(masterKey, "1" + w)
- *       K2 = F(masterKey, "2" + w)
- * 2. Return (K1, K2) to be used by the server.
+ * Given (masterKey, w), derive:
+ *   a. Compute combined = computePRFExpanded(masterKey, w)
+ *   b. Split combined into:
+ *          K1 = first KEYLEN bytes,
+ *          K2 = last KEYLEN bytes.
+ * Return (K1, K2) for use by the server.
  */
-std::pair<std::vector<unsigned char>, std::vector<unsigned char>> Client(const std::vector<unsigned char> masterKey, const std::string &w)
+std::pair<std::vector<unsigned char>, std::vector<unsigned char>> Client(
+    const std::vector<unsigned char> &masterKey, const std::string &w)
 {
-    std::vector<unsigned char> K1 = Encryption::computePRF(masterKey, "1" + w);
-    std::vector<unsigned char> K2 = Encryption::computePRF(masterKey, "2" + w);
-    // printPair2({K1, K2});
+    std::vector<unsigned char> combined = computePRFExpanded(masterKey, w);
+    std::vector<unsigned char> K1(combined.begin(), combined.begin() + KEYLEN);
+    std::vector<unsigned char> K2(combined.begin() + KEYLEN, combined.end());
     return {K1, K2};
 }
 
 /*
  * Server (Search) Function:
- * 1. For each counter c = 0, 1, 2, ...:
- *       Compute tag = F(K1, c)
- *       If tag is found in ED, decrypt the corresponding encrypted id using K2.
- *       Stop when no entry is found.
+ * For each counter c = 0, 1, 2, ...:
+ *   a. Compute tag = F(K1, c)
+ *   b. If tag is found in ED, decrypt the corresponding encrypted id using K2.
+ *   c. Stop when no entry is found.
  */
 std::vector<std::string> Server(const std::map<std::string, std::vector<unsigned char>> &ED,
                                 const std::vector<unsigned char> &K1,
@@ -180,32 +159,6 @@ std::vector<std::string> Server(const std::map<std::string, std::vector<unsigned
     return output;
 }
 
-// Helper: Print the search parameters.
-void printSearchResult(const std::map<std::string, std::vector<unsigned char>> &ED,
-                       const std::vector<unsigned char> &masterKey,
-                       const std::string &w)
-{
-    std::cout << "Encrypted Database (ED):" << std::endl;
-    for (const auto &pair : ED)
-    {
-        std::cout << "Lookup Tag: " << pair.first << " -> Encrypted Value: ";
-        for (const auto &value : pair.second)
-        {
-            std::cout << value << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << "Master Key:" << std::endl;
-    for (const auto &byte : masterKey)
-    {
-        std::cout << byte << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Search Keyword: " << w << std::endl;
-}
-
 /*
  * Search:
  * Given ED and masterKey, perform the search for keyword w.
@@ -215,7 +168,6 @@ std::vector<std::string> Pibas::Search(
     const std::vector<unsigned char> &masterKey,
     const std::string &w)
 {
-    // printSearchResult(ED, masterKey, w);
     auto keys = Client(masterKey, w);
     std::cout << "Starting server lookup..." << std::endl;
     std::vector<std::string> result = Server(ED, keys.first, keys.second);
