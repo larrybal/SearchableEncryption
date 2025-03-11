@@ -27,7 +27,7 @@ std::string toHex(const vector<unsigned char> &data)
 }
 
 // Setup function: creates an encrypted index
-std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
+std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Pibas::Setup(
     const std::map<std::string, std::vector<std::string>> &D)
 {
     std::vector<unsigned char> K = Encryption::generateKey(KEYLEN);
@@ -108,7 +108,7 @@ std::vector<std::string> Server(const map<string, vector<unsigned char>> &ED,
 }
 
 // Search function: retrieves document IDs for a given keyword
-std::vector<std::string> Search(
+std::vector<std::string> Pibas::Search(
     const map<string, vector<unsigned char>> &ED,
     const vector<unsigned char> &K,
     const string &w)

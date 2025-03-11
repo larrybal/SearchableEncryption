@@ -17,7 +17,9 @@ int main()
     dataset["31"] = {"emp8", "emp9"};
 
     // Master key
-    std::string masterKey = "masterkey";
+    const vector<unsigned char> masterKey(
+        reinterpret_cast<const unsigned char *>("masterkey"),
+        reinterpret_cast<const unsigned char *>("masterkey") + strlen("masterkey"));
 
     // 2. Run Setup and generate the encrypted index ED
     pair<vector<unsigned char>, std::map<std::string, std::vector<unsigned char>>> K_ED = Pibas::Setup(dataset);

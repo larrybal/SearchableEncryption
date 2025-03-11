@@ -13,7 +13,7 @@ public:
 
     static std::vector<std::string> Search(
         const std::map<std::string, std::vector<unsigned char>> &ED,
-        const std::string &K,
+        const vector<unsigned char> &K,
         const std::string &w);
 };
 

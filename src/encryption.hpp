@@ -16,7 +16,7 @@ public:
 
     // Derive subkeys K1 and K2 from the master key
     static std::pair<std::vector<unsigned char>, std::vector<unsigned char>>
-    deriveKey(const std::vector<unsigned char> &masterKey, const std::string w);
+    deriveKey(const std::vector<unsigned char> &masterKey, const std::string &w);
 
     // Compute PRF
     static std::vector<unsigned char> computePRF(const std::vector<unsigned char> &key, const std::string &data);
