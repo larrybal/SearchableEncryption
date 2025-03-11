@@ -41,7 +41,7 @@ std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
         const std::string &w = entry.first;
         const vector<string> &ids = entry.second;
 
-        auto keys = Encryption::deriveKey(K, vector<string>{w});
+        auto keys = Encryption::deriveKey(K, w);
 
         vector<unsigned char> K1 = keys.first;
         vector<unsigned char> K2 = keys.second;
