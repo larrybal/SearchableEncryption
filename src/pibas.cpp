@@ -99,9 +99,8 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
     }
 
     // Sort L lexicographically by the lookup tag.
-    sort(L.begin(), L.end(), [](const auto &a, const auto &b) {
-        return a.first < b.first;
-    });
+    sort(L.begin(), L.end(), [](const auto &a, const auto &b)
+         { return a.first < b.first; });
 
     // Create the encrypted database ED.
     std::map<std::string, std::vector<unsigned char>> ED;
@@ -109,7 +108,7 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
     {
         ED[p.first] = p.second;
     }
-    printPair({masterKey, ED});
+    // printPair({masterKey, ED});
     return {masterKey, ED};
 }
 
@@ -142,7 +141,7 @@ std::pair<std::vector<unsigned char>, std::vector<unsigned char>> Client(const s
 {
     std::vector<unsigned char> K1 = Encryption::computePRF(masterKey, "1" + w);
     std::vector<unsigned char> K2 = Encryption::computePRF(masterKey, "2" + w);
-    printPair2({K1, K2});
+    // printPair2({K1, K2});
     return {K1, K2};
 }
 
@@ -216,7 +215,7 @@ std::vector<std::string> Pibas::Search(
     const std::vector<unsigned char> &masterKey,
     const std::string &w)
 {
-    printSearchResult(ED, masterKey, w);
+    // printSearchResult(ED, masterKey, w);
     auto keys = Client(masterKey, w);
     std::cout << "Starting server lookup..." << std::endl;
     std::vector<std::string> result = Server(ED, keys.first, keys.second);
