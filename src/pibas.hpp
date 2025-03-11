@@ -12,7 +12,7 @@ public:
         const std::map<std::string, std::vector<std::string>> &D);
 
     static std::vector<std::string> Search(
-        const std::map<std::string, std::vector<std::string>> &ED,
+        const std::map<std::string, std::vector<unsigned char>> &ED,
         const std::string &K,
         const std::string &w);
 };

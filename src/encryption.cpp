@@ -9,7 +9,7 @@
 
 using namespace std;
 
-vector<unsigned char> generateKey(size_t length)
+vector<unsigned char> Encryption::generateKey(size_t length)
 {
     vector<unsigned char> key(length);
 
@@ -29,7 +29,7 @@ vector<unsigned char> generateKey(size_t length)
     return key;
 }
 
-pair<vector<unsigned char>, vector<unsigned char>> deriveKey(const vector<unsigned char> &masterKey, const string &w)
+pair<vector<unsigned char>, vector<unsigned char>> Encryption::deriveKey(const vector<unsigned char> &masterKey, const string &w)
 {
     vector<unsigned char> prf_output = Encryption::computePRF(masterKey, w);
 
@@ -43,7 +43,7 @@ pair<vector<unsigned char>, vector<unsigned char>> deriveKey(const vector<unsign
     return {K1, K2}; // Return K1 and K2 as a pair
 }
 
-vector<unsigned char> computePRF(const vector<unsigned char> &key, const string &data)
+vector<unsigned char> Encryption::computePRF(const vector<unsigned char> &key, const string &data)
 {
     vector<unsigned char> result(EVP_MAX_MD_SIZE); // Max possible hash size
     unsigned int result_len = 0;
@@ -58,7 +58,7 @@ vector<unsigned char> computePRF(const vector<unsigned char> &key, const string 
     return result;
 }
 
-vector<unsigned char> encryptAES(const vector<unsigned char> &key, const string &plaintext)
+vector<unsigned char> Encryption::encryptAES(const vector<unsigned char> &key, const string &plaintext)
 {
     // Implementation goes here
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
@@ -108,7 +108,7 @@ vector<unsigned char> encryptAES(const vector<unsigned char> &key, const string 
     return ciphertext;
 }
 
-string decryptAES(const vector<unsigned char> &key, const vector<unsigned char> &ciphertext)
+string Encryption::decryptAES(const vector<unsigned char> &key, const vector<unsigned char> &ciphertext)
 {
     if (ciphertext.size() < AES_BLOCK_SIZE)
     {
