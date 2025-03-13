@@ -2,3 +2,4 @@
 *.exe
 *.csv
 main
+venv/
