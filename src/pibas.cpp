@@ -84,7 +84,7 @@ std::pair<std::vector<unsigned char>, std::map<std::string, std::vector<unsigned
         {
             // Compute lookup tag ℓ = F(K1, c)
             std::string lookupTag = toHex(Encryption::computePRF(K1, std::to_string(c)));
-            std::cout << "id: " << id << " lookup tag: " << lookupTag << std::endl;
+            // std::cout << "id: " << id << " lookup tag: " << lookupTag << std::endl;
 
             // Encrypt the document id using K2.
             std::vector<unsigned char> encryptedId = Encryption::encryptAES(K2, id);
@@ -141,18 +141,18 @@ std::vector<std::string> Server(const std::map<std::string, std::vector<unsigned
     while (true)
     {
         std::string tag = toHex(Encryption::computePRF(K1, std::to_string(c)));
-        std::cout << "Computed tag: " << tag << std::endl;
+        // std::cout << "Computed tag: " << tag << std::endl;
         auto it = ED.find(tag);
 
         if (it == ED.end())
         {
-            std::cout << "No entry found for counter c = " << c << ". Ending search." << std::endl;
+            // std::cout << "No entry found for counter c = " << c << ". Ending search." << std::endl;
             break;
         }
 
         std::vector<unsigned char> encryptedId = it->second;
         std::string id = Encryption::decryptAES(K2, encryptedId);
-        std::cout << "Decrypted id: " << id << std::endl;
+        // std::cout << "Decrypted id: " << id << std::endl;
         output.push_back(id);
         c++;
     }
@@ -169,8 +169,8 @@ std::vector<std::string> Pibas::Search(
     const std::string &w)
 {
     auto keys = Client(masterKey, w);
-    std::cout << "Starting server lookup..." << std::endl;
+    // std::cout << "Starting server lookup..." << std::endl;
     std::vector<std::string> result = Server(ED, keys.first, keys.second);
-    std::cout << "Search complete." << std::endl;
+    // std::cout << "Search complete." << std::endl;
     return result;
 }
