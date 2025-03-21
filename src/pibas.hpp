@@ -11,9 +11,9 @@ public:
     static std::pair<vector<unsigned char>, map<string, vector<unsigned char>>> Setup(
         const std::map<std::string, std::vector<std::string>> &D);
 
-    static std::vector<std::string> Search(
+    static std::tuple<std::vector<std::string>, int, double> Search(
         const std::map<std::string, std::vector<unsigned char>> &ED,
-        const vector<unsigned char> &K,
+        const std::vector<unsigned char> &masterKey,
         const std::string &w);
 };
 

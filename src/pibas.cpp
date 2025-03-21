@@ -131,46 +131,43 @@ std::pair<std::vector<unsigned char>, std::vector<unsigned char>> Client(
  *   b. If tag is found in ED, decrypt the corresponding encrypted id using K2.
  *   c. Stop when no entry is found.
  */
-std::vector<std::string> Server(const std::map<std::string, std::vector<unsigned char>> &ED,
-                                const std::vector<unsigned char> &K1,
-                                const std::vector<unsigned char> &K2)
+std::tuple<std::vector<std::string>, int, double> Server(
+    const std::map<std::string, std::vector<unsigned char>> &ED,
+    const std::vector<unsigned char> &K1,
+    const std::vector<unsigned char> &K2)
 {
     std::vector<std::string> output;
-    int c = 0;
+    int accessed_records = 0;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    int c = 0;
     while (true)
     {
         std::string tag = toHex(Encryption::computePRF(K1, std::to_string(c)));
-        // std::cout << "Computed tag: " << tag << std::endl;
         auto it = ED.find(tag);
 
         if (it == ED.end())
-        {
-            // std::cout << "No entry found for counter c = " << c << ". Ending search." << std::endl;
             break;
-        }
 
         std::vector<unsigned char> encryptedId = it->second;
         std::string id = Encryption::decryptAES(K2, encryptedId);
-        // std::cout << "Decrypted id: " << id << std::endl;
         output.push_back(id);
+        accessed_records++;
         c++;
     }
-    return output;
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    double query_time = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+
+    return {output, accessed_records, query_time};
 }
 
-/*
- * Search:
- * Given ED and masterKey, perform the search for keyword w.
- */
-std::vector<std::string> Pibas::Search(
+std::tuple<std::vector<std::string>, int, double> Pibas::Search(
     const std::map<std::string, std::vector<unsigned char>> &ED,
     const std::vector<unsigned char> &masterKey,
     const std::string &w)
 {
     auto keys = Client(masterKey, w);
-    // std::cout << "Starting server lookup..." << std::endl;
-    std::vector<std::string> result = Server(ED, keys.first, keys.second);
-    // std::cout << "Search complete." << std::endl;
-    return result;
+    return Server(ED, keys.first, keys.second);
 }
