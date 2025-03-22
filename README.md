@@ -72,7 +72,7 @@ GNU Make
 
 To compile the project, navigate to the src/ or src_log_brc/ directory and run:
 
-make
+`make`
 
 Usage
 
