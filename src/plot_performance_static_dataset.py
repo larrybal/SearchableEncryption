@@ -16,7 +16,7 @@ for size in dataset_sizes:
 # Set labels and title for Search Time plot
 ax1.set_xlabel('Range Size')
 ax1.set_ylabel('Search Time (ms)')
-ax1.set_title('Search Time vs Range Size for Different Dataset Sizes')
+ax1.set_title('Search Time vs Range Size')
 ax1.legend(title='Dataset Size')
 ax1.grid(True)
 
@@ -28,7 +28,7 @@ for size in dataset_sizes:
 # Set labels and title for Accessed Records plot
 ax2.set_xlabel('Range Size')
 ax2.set_ylabel('Accessed Records')
-ax2.set_title('Accessed Records vs Range Size for Different Dataset Sizes')
+ax2.set_title('Accessed Records vs Range Size')
 ax2.legend(title='Dataset Size')
 ax2.grid(True)
 
