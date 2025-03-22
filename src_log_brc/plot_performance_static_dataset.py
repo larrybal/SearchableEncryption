@@ -14,12 +14,13 @@ for size in dataset_sizes:
     plt.plot(subset['RangeSize'], subset['SearchTime'], label=f'Dataset Size {size}', marker='o')
 
 # Set labels and title for Search Time plot
-plt.xlabel('Range Size')
-plt.ylabel('Search Time (ms)')
-plt.title('Search Time vs Range Size for Different Dataset Sizes')
+plt.xlabel('Range Size (log scale)')
+plt.ylabel('Search Time (ms) (log scale)')
+plt.title('Search Time vs Range Size for Different Dataset Sizes for LOG-BRC')
 plt.legend(title='Dataset Size')
 plt.grid(True)
-
+plt.xscale('log')  # Optional: Use log scale for better visibility on large range
+plt.yscale('log')  # Optional: Use log scale for better visibility
 # Adjust layout to prevent overlap
 plt.tight_layout()
 

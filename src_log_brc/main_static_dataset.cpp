@@ -22,7 +22,7 @@ int main()
     ofstream file("performance_results_static_dataset.csv");
     file << "DatasetSize,RangeSize,SetupTime,SearchTime\n";
 
-    const int max_n = 300;
+    const int max_n = 1 << 20;
     map<int, vector<int>> dataset;
 
     cout << "Generating dataset with n = " << max_n << " elements...\n";
@@ -40,7 +40,7 @@ int main()
     cout << "Setup Time: " << setup_time << " ms\n";
 
     cout << "Performing range queries...\n";
-    for (int r = 1; r <= max_n; r += 5)
+    for (int r = 1; r <= max_n; r *= 2)
     {
         cout << "Querying range: [1, " << r << "]\n";
 
