@@ -23,11 +23,11 @@ int main()
     file << "DatasetSize,RangeSize,SetupTime,SearchTime,AccessedRecords\n";
 
     // Set maximum database size n = 2^20
-    const int max_n = 1 << 20; // 2^20
+    const int max_n = 10000; // 2^20
     map<string, vector<string>> dataset;
 
     // Generate datasets with varying sizes
-    for (int n = 16; n <= max_n; n *= 2)
+    for (int n = 10; n <= max_n; n += 400)
     {
         cout << "Generating dataset with n = " << n << " elements...\n";
 

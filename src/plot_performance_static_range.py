@@ -12,8 +12,8 @@ plt.ylabel('Query Time (ms)')
 plt.title('Dataset Size vs Query Time')
 plt.grid(True)
 plt.legend()
-plt.xscale('log')  # Optional: Use log scale for better visibility on large range
-plt.yscale('log')  # Optional: Use log scale for better visibility
+# plt.xscale('log')  # Optional: Use log scale for better visibility on large range
+# plt.yscale('log')  # Optional: Use log scale for better visibility
 plt.show()
 # Plot 2: Dataset Size vs Accessed Records
 plt.figure(figsize=(10, 5))
@@ -23,6 +23,6 @@ plt.ylabel('Accessed Records')
 plt.title('Dataset Size vs Accessed Records')
 plt.grid(True)
 plt.legend()
-plt.xscale('log')  # Optional: Use log scale for better visibility on large range
-plt.yscale('log')  # Optional: Use log scale for better visibility
+# plt.xscale('log')  # Optional: Use log scale for better visibility on large range
+# plt.yscale('log')  # Optional: Use log scale for better visibility
 plt.show()

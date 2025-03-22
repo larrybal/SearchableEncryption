@@ -19,7 +19,7 @@ double measure_time(function<void()> func)
 
 int main()
 {
-    ofstream file("performance_results.csv");
+    ofstream file("performance_results_static_dataset.csv");
     file << "DatasetSize,RangeSize,SetupTime,SearchTime,AccessedRecords\n";
 
     const int max_n = 1 << 20; // 2^20
