@@ -13,13 +13,21 @@ plt.title("Accuracy vs. Dataset Size")
 plt.grid(True)
 plt.show()
 
+
+# Plotting on a log scale
 plt.figure(figsize=(8, 6))
 plt.plot(data["DatasetSize"], data["QueryTime"], marker='o')
 plt.xlabel("Dataset Size")
 plt.ylabel("Query Time (seconds)")
-plt.title("Query Time vs. Dataset Size")
-plt.grid(True)
+plt.title("Query Time vs. Dataset Size (Log Scale)")
+
+# Set both axes to log scale
+plt.xscale('log')
+plt.yscale('log')
+
+plt.grid(True, which="both", ls="--")
 plt.show()
+
 
 plt.figure(figsize=(8, 6))
 plt.plot(data["DatasetSize"], data["MemoryUsage"], marker='o')

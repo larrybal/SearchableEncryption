@@ -1,4 +1,4 @@
-#include "log-brc.hpp"
+#include "log_brc.hpp"
 #include <algorithm>
 #include <random>
 
